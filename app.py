@@ -10,7 +10,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 app = Flask(__name__)
 CORS(app)
 
-HIBP_API_KEY = os.getenv("HIBP_API_KEY", "")          # HaveIBeenPwned
 NUMVERIFY_KEY = os.getenv("NUMVERIFY_API_KEY", "")     # Phone lookup
 
 # ─── Username Checker ────────────────────────────────────────────────────────
@@ -105,59 +104,36 @@ def lookup_phone(number: str) -> dict:
         return {"status": "error", "message": str(e)}
 
 
-# ─── Email Breach Check ──────────────────────────────────────────────────────
+# ─── Email Breach Check (emailrep.io — free, no key) ─────────────────────────
 
 def check_email_breach(email: str) -> dict:
     email = email.strip().lower()
-    results = {"status": "success", "email": email, "breaches": [], "pastes": []}
-
-    if not HIBP_API_KEY:
-        results["note"] = "Set HIBP_API_KEY for breach data (haveibeenpwned.com)"
-        return results
-
-    headers = {"hibp-api-key": HIBP_API_KEY, "User-Agent": "OSINT-Profiler"}
-
-    # Breaches
     try:
         r = requests.get(
-            f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}",
-            headers=headers, params={"truncateResponse": "false"}, timeout=10
+            f"https://emailrep.io/{email}",
+            headers={"User-Agent": "osint-profiler"},
+            timeout=10,
         )
-        if r.status_code == 200:
-            for b in r.json():
-                results["breaches"].append({
-                    "name": b.get("Name"),
-                    "domain": b.get("Domain"),
-                    "breach_date": b.get("BreachDate"),
-                    "pwn_count": b.get("PwnCount"),
-                    "data_classes": b.get("DataClasses", []),
-                    "description": b.get("Description", "")[:200],
-                })
-        elif r.status_code == 404:
-            pass  # no breaches — good
+        if r.status_code != 200:
+            return {"status": "error", "message": f"emailrep.io returned {r.status_code}"}
+        d = r.json()
+        rep = d.get("details", {})
+        return {
+            "status": "success",
+            "email": email,
+            "reputation": d.get("reputation"),          # none / low / medium / high
+            "suspicious": d.get("suspicious", False),
+            "breach_count": rep.get("breach_count", 0),
+            "breached": rep.get("breached", False),
+            "last_breached_at": rep.get("last_seen_breached"),
+            "malicious_activity": rep.get("malicious_activity", False),
+            "spam": rep.get("spam", False),
+            "disposable": rep.get("disposable", False),
+            "free_provider": rep.get("free_provider", False),
+            "profiles": rep.get("profiles", []),
+        }
     except Exception as e:
-        results["breach_error"] = str(e)
-
-    # Pastes
-    try:
-        r = requests.get(
-            f"https://haveibeenpwned.com/api/v3/pasteaccount/{email}",
-            headers=headers, timeout=10
-        )
-        if r.status_code == 200:
-            for p in r.json():
-                results["pastes"].append({
-                    "source": p.get("Source"),
-                    "title": p.get("Title"),
-                    "date": p.get("Date"),
-                    "email_count": p.get("EmailCount"),
-                })
-    except Exception:
-        pass
-
-    results["breach_count"] = len(results["breaches"])
-    results["paste_count"] = len(results["pastes"])
-    return results
+        return {"status": "error", "message": str(e)}
 
 
 # ─── Name Search ─────────────────────────────────────────────────────────────
@@ -237,7 +213,6 @@ def api_name():
 def health():
     return jsonify({
         "status": "ok",
-        "hibp_configured": bool(HIBP_API_KEY),
         "numverify_configured": bool(NUMVERIFY_KEY),
     })
 

@@ -126,7 +126,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div>
       <h3>API Status</h3>
       <div class="api-box">
-        <div class="api-row"><span class="api-key">HIBP</span><span class="dot off" id="dot-hibp"></span></div>
+        <div class="api-row"><span class="api-key">EMAILREP</span><span class="dot on"></span></div>
         <div class="api-row"><span class="api-key">NUMVERIFY</span><span class="dot off" id="dot-num"></span></div>
       </div>
     </div>
@@ -201,7 +201,6 @@ function switchTab(name, btn) {
 async function checkHealth() {
   try {
     const d = await fetch('/api/health').then(r => r.json());
-    document.getElementById('dot-hibp').className = 'dot ' + (d.hibp_configured ? 'on' : 'off');
     document.getElementById('dot-num').className = 'dot ' + (d.numverify_configured ? 'on' : 'off');
   } catch(e) {}
 }
@@ -326,34 +325,24 @@ async function runEmail() {
 
 function renderEmail(d) {
   if (d.status==='error') { document.getElementById('email-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
-  let html = '';
-  if (d.note) html += `<div class="note-msg" style="margin-bottom:1rem">${d.note}</div>`;
-  const bc = d.breach_count||0, pc = d.paste_count||0;
-  html += `<div class="stat-row">
+  const bc = d.breach_count || 0;
+  const repColor = {'high':'var(--green)','medium':'var(--orange)','low':'var(--red)','none':'var(--muted)'}[d.reputation] || 'var(--muted)';
+  let html = `<div class="stat-row">
     <div class="stat-box"><div class="stat-num" style="color:${bc>0?'var(--red)':'var(--green)'}">${bc}</div><div class="stat-lbl">BREACHES</div></div>
-    <div class="stat-box"><div class="stat-num" style="color:${pc>0?'var(--orange)':'var(--green)'}">${pc}</div><div class="stat-lbl">PASTES</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:${repColor};font-size:.9rem;padding-top:4px">${(d.reputation||'?').toUpperCase()}</div><div class="stat-lbl">REPUTATION</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:${d.suspicious?'var(--red)':'var(--green)'}">${d.suspicious?'YES':'NO'}</div><div class="stat-lbl">SUSPICIOUS</div></div>
   </div>`;
-  if (bc > 0) {
-    let body = '';
-    (d.breaches||[]).forEach(b => {
-      body += `<div class="breach-item">
-        <div class="breach-name">🔴 ${b.name}${b.domain?' — '+b.domain:''}</div>
-        <div class="breach-meta"><span>📅 ${b.breach_date||'?'}</span><span>👥 ${(b.pwn_count||0).toLocaleString()} accounts</span></div>
-        ${b.data_classes?.length?`<div class="tag-list" style="margin-bottom:6px">${b.data_classes.map(c=>`<span class="tag red">${c}</span>`).join('')}</div>`:''}
-        ${b.description?`<div class="breach-desc">${b.description.replace(/<[^>]+>/g,'')}</div>`:''}
-      </div>`;
-    });
-    html += card('🔴','Breaches Found',`${bc} breach${bc!==1?'es':''}`, 'cb-err', body);
-  } else if (!d.note) {
-    html += card('✅','No Breaches Found','CLEAN','cb-ok','<div style="color:var(--green);font-family:var(--mono);font-size:.82rem">This email was not found in any known data breaches.</div>');
-  }
-  if (pc > 0) {
-    let body = '';
-    (d.pastes||[]).forEach(p => {
-      body += `<div class="data-row"><span class="data-key">${p.source||'?'}</span><span class="data-val">${p.title||'Untitled'} — ${p.date||'?'} (${p.email_count||'?'} emails)</span></div>`;
-    });
-    html += card('📋','Paste Sites',`${pc} paste${pc!==1?'s':''}`, 'cb-warn', body);
-  }
+  let body = '';
+  const flags = [
+    ['BREACHED', d.breached], ['MALICIOUS ACTIVITY', d.malicious_activity],
+    ['SPAM', d.spam], ['DISPOSABLE', d.disposable], ['FREE PROVIDER', d.free_provider]
+  ];
+  flags.forEach(([k,v]) => {
+    body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val" style="color:${v?'var(--red)':'var(--green)'}">${v?'Yes':'No'}</span></div>`;
+  });
+  if (d.last_breached_at) body += `<div class="data-row"><span class="data-key">LAST BREACHED</span><span class="data-val">${d.last_breached_at}</span></div>`;
+  if (d.profiles?.length) body += `<div class="data-row"><span class="data-key">PROFILES</span><span class="data-val"><div class="tag-list">${d.profiles.map(p=>`<span class="tag blue">${p}</span>`).join('')}</div></span></div>`;
+  html += card('📧','Email Report', d.breached?`${bc} breach${bc!==1?'es':''}` : 'CLEAN', d.breached?'cb-err':'cb-ok', body);
   document.getElementById('email-results').innerHTML = html;
 }
 
