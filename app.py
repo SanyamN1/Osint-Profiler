@@ -1,393 +1,245 @@
-"""
-OSINT Investigation Framework
-Automates information gathering: WHOIS, DNS, email metadata, social footprint.
-"""
-
+"""People OSINT Profiler — username, phone, email breach, name search."""
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import requests
-import socket
-import json
-import re
-import time
 import os
-from urllib.parse import urlparse
+import time
+import hashlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import whois
-import dns.resolver
-import dns.reversename
 
 app = Flask(__name__)
 CORS(app)
 
-# ─── API Keys ────────────────────────────────────────────────────────────────
-HUNTER_API_KEY = os.getenv("HUNTER_API_KEY", "")          # Email lookup
-SHODAN_API_KEY = os.getenv("SHODAN_API_KEY", "")           # IP/host intel
-IPINFO_TOKEN   = os.getenv("IPINFO_TOKEN", "")             # IP geolocation
-VIRUSTOTAL_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")       # Domain reputation
+HIBP_API_KEY = os.getenv("HIBP_API_KEY", "")          # HaveIBeenPwned
+NUMVERIFY_KEY = os.getenv("NUMVERIFY_API_KEY", "")     # Phone lookup
+
+# ─── Username Checker ────────────────────────────────────────────────────────
+
+PLATFORMS = {
+    "GitHub":       "https://github.com/{}",
+    "Twitter/X":    "https://twitter.com/{}",
+    "Instagram":    "https://www.instagram.com/{}",
+    "TikTok":       "https://www.tiktok.com/@{}",
+    "Reddit":       "https://www.reddit.com/user/{}",
+    "Pinterest":    "https://www.pinterest.com/{}",
+    "Twitch":       "https://www.twitch.tv/{}",
+    "YouTube":      "https://www.youtube.com/@{}",
+    "LinkedIn":     "https://www.linkedin.com/in/{}",
+    "Snapchat":     "https://www.snapchat.com/add/{}",
+    "Telegram":     "https://t.me/{}",
+    "Medium":       "https://medium.com/@{}",
+    "Dev.to":       "https://dev.to/{}",
+    "Keybase":      "https://keybase.io/{}",
+    "Pastebin":     "https://pastebin.com/u/{}",
+    "HackerNews":   "https://news.ycombinator.com/user?id={}",
+    "ProductHunt":  "https://www.producthunt.com/@{}",
+    "Replit":       "https://replit.com/@{}",
+    "Gitlab":       "https://gitlab.com/{}",
+    "Bitbucket":    "https://bitbucket.org/{}",
+}
+
+def check_username(username: str) -> dict:
+    results = {"status": "success", "username": username, "found": [], "not_found": []}
+
+    def probe(name, url_template):
+        url = url_template.format(username)
+        try:
+            r = requests.get(url, timeout=6, allow_redirects=True,
+                             headers={"User-Agent": "Mozilla/5.0"})
+            # 200 = exists, 404 = not found; some sites redirect to login on 404
+            taken = r.status_code == 200
+            return name, url, taken
+        except Exception:
+            return name, url, None  # unknown
+
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        futures = {ex.submit(probe, n, u): n for n, u in PLATFORMS.items()}
+        for f in as_completed(futures):
+            name, url, taken = f.result()
+            entry = {"platform": name, "url": url}
+            if taken is True:
+                results["found"].append(entry)
+            elif taken is False:
+                results["not_found"].append(entry)
+            # None (error/unknown) silently dropped
+
+    results["found"].sort(key=lambda x: x["platform"])
+    results["not_found"].sort(key=lambda x: x["platform"])
+    return results
 
 
-# ─── Module: WHOIS ────────────────────────────────────────────────────────────
+# ─── Phone Lookup ────────────────────────────────────────────────────────────
 
-def gather_whois(target: str) -> dict:
-    """Extract WHOIS registration data for a domain."""
-    try:
-        domain = extract_domain(target)
-        w = whois.whois(domain)
-
-        def safe_str(val):
-            if val is None: return None
-            if isinstance(val, list): return val[0].strftime("%Y-%m-%d") if hasattr(val[0], 'strftime') else str(val[0])
-            if hasattr(val, 'strftime'): return val.strftime("%Y-%m-%d")
-            return str(val)
-
+def lookup_phone(number: str) -> dict:
+    # Strip spaces/dashes for cleaner input
+    number = number.strip().replace(" ", "").replace("-", "")
+    if not NUMVERIFY_KEY:
+        # Fallback: basic format info without API
         return {
             "status": "success",
-            "domain": domain,
-            "registrar": safe_str(w.registrar),
-            "created": safe_str(w.creation_date),
-            "expires": safe_str(w.expiration_date),
-            "updated": safe_str(w.updated_date),
-            "name_servers": [ns.lower() for ns in (w.name_servers or [])][:6],
-            "status_codes": w.status if isinstance(w.status, list) else [w.status] if w.status else [],
-            "emails": list(set(w.emails)) if w.emails else [],
-            "org": safe_str(w.org),
-            "country": safe_str(w.country),
-            "registrant_name": safe_str(getattr(w, 'name', None)),
-            "dnssec": str(getattr(w, 'dnssec', 'Unknown')),
+            "number": number,
+            "note": "Set NUMVERIFY_API_KEY for full carrier/line-type data",
+            "country_code": number[:3] if number.startswith("+") else None,
+        }
+    try:
+        r = requests.get(
+            "http://apilayer.net/api/validate",
+            params={"access_key": NUMVERIFY_KEY, "number": number, "format": 1},
+            timeout=8,
+        )
+        d = r.json()
+        if not d.get("valid"):
+            return {"status": "error", "message": "Invalid or unrecognised number"}
+        return {
+            "status": "success",
+            "number": d.get("international_format"),
+            "local_format": d.get("local_format"),
+            "valid": d.get("valid"),
+            "country": d.get("country_name"),
+            "country_code": d.get("country_code"),
+            "location": d.get("location"),
+            "carrier": d.get("carrier"),
+            "line_type": d.get("line_type"),
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
 
-# ─── Module: DNS ──────────────────────────────────────────────────────────────
+# ─── Email Breach Check ──────────────────────────────────────────────────────
 
-def gather_dns(target: str) -> dict:
-    """Enumerate DNS records for a domain."""
-    domain = extract_domain(target)
-    records = {}
+def check_email_breach(email: str) -> dict:
+    email = email.strip().lower()
+    results = {"status": "success", "email": email, "breaches": [], "pastes": []}
 
-    record_types = ["A", "AAAA", "MX", "NS", "TXT", "CNAME", "SOA", "CAA"]
+    if not HIBP_API_KEY:
+        results["note"] = "Set HIBP_API_KEY for breach data (haveibeenpwned.com)"
+        return results
 
-    for rtype in record_types:
-        try:
-            answers = dns.resolver.resolve(domain, rtype, lifetime=5)
-            records[rtype] = [str(r) for r in answers]
-        except Exception:
-            records[rtype] = []
+    headers = {"hibp-api-key": HIBP_API_KEY, "User-Agent": "OSINT-Profiler"}
 
-    # Reverse DNS for A records
-    reverse_dns = {}
-    for ip in records.get("A", [])[:3]:
-        try:
-            rev_name = dns.reversename.from_address(ip)
-            ptr = str(dns.resolver.resolve(rev_name, "PTR", lifetime=3)[0])
-            reverse_dns[ip] = ptr
-        except Exception:
-            reverse_dns[ip] = None
-
-    # SPF/DMARC analysis
-    spf_record = next((r for r in records.get("TXT", []) if "v=spf" in r.lower()), None)
-    dmarc_records = []
+    # Breaches
     try:
-        dmarc_answers = dns.resolver.resolve(f"_dmarc.{domain}", "TXT", lifetime=5)
-        dmarc_records = [str(r) for r in dmarc_answers]
+        r = requests.get(
+            f"https://haveibeenpwned.com/api/v3/breachedaccount/{email}",
+            headers=headers, params={"truncateResponse": "false"}, timeout=10
+        )
+        if r.status_code == 200:
+            for b in r.json():
+                results["breaches"].append({
+                    "name": b.get("Name"),
+                    "domain": b.get("Domain"),
+                    "breach_date": b.get("BreachDate"),
+                    "pwn_count": b.get("PwnCount"),
+                    "data_classes": b.get("DataClasses", []),
+                    "description": b.get("Description", "")[:200],
+                })
+        elif r.status_code == 404:
+            pass  # no breaches — good
+    except Exception as e:
+        results["breach_error"] = str(e)
+
+    # Pastes
+    try:
+        r = requests.get(
+            f"https://haveibeenpwned.com/api/v3/pasteaccount/{email}",
+            headers=headers, timeout=10
+        )
+        if r.status_code == 200:
+            for p in r.json():
+                results["pastes"].append({
+                    "source": p.get("Source"),
+                    "title": p.get("Title"),
+                    "date": p.get("Date"),
+                    "email_count": p.get("EmailCount"),
+                })
     except Exception:
         pass
 
-    # MX hosts extraction
-    mx_hosts = []
-    for mx in records.get("MX", []):
-        parts = mx.split()
-        if len(parts) >= 2:
-            mx_hosts.append({"priority": parts[0], "host": parts[1].rstrip(".")})
+    results["breach_count"] = len(results["breaches"])
+    results["paste_count"] = len(results["pastes"])
+    return results
+
+
+# ─── Name Search ─────────────────────────────────────────────────────────────
+
+NAME_SEARCH_TEMPLATES = [
+    ("LinkedIn",   "https://www.linkedin.com/search/results/people/?keywords={}"),
+    ("Facebook",   "https://www.facebook.com/search/people/?q={}"),
+    ("Twitter/X",  "https://twitter.com/search?q={}&f=user"),
+    ("Instagram",  "https://www.instagram.com/explore/search/keyword/?q={}"),
+    ("Google",     "https://www.google.com/search?q=%22{}%22+site:linkedin.com+OR+site:twitter.com+OR+site:facebook.com"),
+    ("TikTok",     "https://www.tiktok.com/search/user?q={}"),
+    ("GitHub",     "https://github.com/search?q={}&type=users"),
+    ("Reddit",     "https://www.reddit.com/search/?q={}&type=user"),
+    ("Pipl",       "https://pipl.com/search/?q={}"),
+    ("Spokeo",     "https://www.spokeo.com/search?q={}"),
+    ("BeenVerified","https://www.beenverified.com/people/search/?firstName={first}&lastName={last}"),
+]
+
+def search_name(name: str) -> dict:
+    name = name.strip()
+    parts = name.split()
+    first = parts[0] if parts else name
+    last = parts[-1] if len(parts) > 1 else ""
+    encoded = name.replace(" ", "+")
+
+    links = []
+    for platform, template in NAME_SEARCH_TEMPLATES:
+        if "{first}" in template:
+            url = template.replace("{first}", first).replace("{last}", last)
+        else:
+            url = template.format(encoded)
+        links.append({"platform": platform, "url": url})
 
     return {
         "status": "success",
-        "domain": domain,
-        "records": records,
-        "reverse_dns": reverse_dns,
-        "mx_hosts": mx_hosts,
-        "spf_record": spf_record,
-        "dmarc_records": dmarc_records,
-        "email_security": {
-            "spf": bool(spf_record),
-            "dmarc": bool(dmarc_records),
-            "dkim_indicator": any("dkim" in r.lower() for r in records.get("TXT", []))
-        }
+        "name": name,
+        "search_links": links,
+        "note": "These are direct search links — click to open each platform's people search for this name.",
     }
 
 
-# ─── Module: IP Intelligence ─────────────────────────────────────────────────
-
-def gather_ip_intel(target: str) -> dict:
-    """Resolve domain to IPs and gather geolocation + ASN data."""
-    domain = extract_domain(target)
-    results = {"status": "success", "domain": domain, "ips": []}
-
-    try:
-        ips = list(set(socket.gethostbyname_ex(domain)[2]))
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-    for ip in ips[:4]:
-        ip_data = {"ip": ip}
-
-        # IPInfo lookup
-        try:
-            headers = {"Authorization": f"Bearer {IPINFO_TOKEN}"} if IPINFO_TOKEN else {}
-            resp = requests.get(f"https://ipinfo.io/{ip}/json", headers=headers, timeout=6)
-            if resp.status_code == 200:
-                info = resp.json()
-                ip_data.update({
-                    "hostname": info.get("hostname"),
-                    "city": info.get("city"),
-                    "region": info.get("region"),
-                    "country": info.get("country"),
-                    "org": info.get("org"),
-                    "asn": info.get("org", "").split()[0] if info.get("org") else None,
-                    "timezone": info.get("timezone"),
-                    "loc": info.get("loc"),
-                    "postal": info.get("postal"),
-                })
-        except Exception:
-            pass
-
-        # Shodan lookup
-        if SHODAN_API_KEY:
-            try:
-                shodan_resp = requests.get(
-                    f"https://api.shodan.io/shodan/host/{ip}?key={SHODAN_API_KEY}",
-                    timeout=8
-                )
-                if shodan_resp.status_code == 200:
-                    sd = shodan_resp.json()
-                    ip_data["shodan"] = {
-                        "open_ports": sd.get("ports", [])[:20],
-                        "vulns": list(sd.get("vulns", {}).keys())[:10],
-                        "hostnames": sd.get("hostnames", [])[:5],
-                        "tags": sd.get("tags", []),
-                        "last_update": sd.get("last_update"),
-                        "os": sd.get("os"),
-                        "isp": sd.get("isp"),
-                    }
-            except Exception:
-                pass
-
-        results["ips"].append(ip_data)
-
-    return results
-
-
-# ─── Module: Email Footprint ──────────────────────────────────────────────────
-
-def gather_email_intel(target: str) -> dict:
-    """Find email addresses associated with a domain."""
-    domain = extract_domain(target)
-    results = {"status": "success", "domain": domain, "emails": [], "patterns": []}
-
-    if HUNTER_API_KEY:
-        try:
-            resp = requests.get(
-                f"https://api.hunter.io/v2/domain-search?domain={domain}&api_key={HUNTER_API_KEY}&limit=20",
-                timeout=10
-            )
-            if resp.status_code == 200:
-                data = resp.json().get("data", {})
-                results["emails"] = [
-                    {
-                        "value": e["value"],
-                        "type": e.get("type"),
-                        "confidence": e.get("confidence"),
-                        "first_name": e.get("first_name"),
-                        "last_name": e.get("last_name"),
-                        "position": e.get("position"),
-                        "sources": len(e.get("sources", []))
-                    }
-                    for e in data.get("emails", [])
-                ]
-                results["patterns"] = data.get("pattern", "Unknown")
-                results["total_found"] = data.get("meta", {}).get("results", 0)
-                results["organization"] = data.get("organization")
-        except Exception as e:
-            results["error"] = str(e)
-    else:
-        results["note"] = "Set HUNTER_API_KEY for email enumeration"
-
-    return results
-
-
-# ─── Module: Domain Reputation ───────────────────────────────────────────────
-
-def gather_domain_reputation(target: str) -> dict:
-    """Check domain reputation via VirusTotal."""
-    domain = extract_domain(target)
-    results = {"status": "success", "domain": domain}
-
-    if not VIRUSTOTAL_KEY:
-        results["note"] = "Set VIRUSTOTAL_API_KEY for reputation data"
-        return results
-
-    try:
-        resp = requests.get(
-            f"https://www.virustotal.com/api/v3/domains/{domain}",
-            headers={"x-apikey": VIRUSTOTAL_KEY},
-            timeout=10
-        )
-        if resp.status_code == 200:
-            data = resp.json()["data"]["attributes"]
-            stats = data.get("last_analysis_stats", {})
-            results.update({
-                "reputation": data.get("reputation", 0),
-                "malicious": stats.get("malicious", 0),
-                "suspicious": stats.get("suspicious", 0),
-                "harmless": stats.get("harmless", 0),
-                "categories": data.get("categories", {}),
-                "creation_date": data.get("creation_date"),
-                "registrar": data.get("registrar"),
-                "tld": data.get("tld"),
-                "popularity_ranks": data.get("popularity_ranks", {}),
-            })
-    except Exception as e:
-        results["error"] = str(e)
-
-    return results
-
-
-# ─── Module: Technology Detection ────────────────────────────────────────────
-
-def gather_tech_fingerprint(target: str) -> dict:
-    """Detect web technologies via HTTP headers and response analysis."""
-    domain = extract_domain(target)
-    url = f"https://{domain}"
-    results = {"status": "success", "domain": domain, "technologies": [], "headers": {}}
-
-    try:
-        resp = requests.get(url, timeout=8, allow_redirects=True, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; OSINT-Framework/1.0)"
-        })
-
-        # Interesting security & tech headers
-        interesting_headers = [
-            "server", "x-powered-by", "x-frame-options", "content-security-policy",
-            "x-xss-protection", "strict-transport-security", "x-content-type-options",
-            "via", "cf-ray", "x-vercel-id", "x-amz-cf-id", "x-cache",
-            "set-cookie", "www-authenticate", "x-generator", "x-drupal-cache"
-        ]
-        for h in interesting_headers:
-            val = resp.headers.get(h)
-            if val:
-                results["headers"][h] = val[:200]
-
-        # Technology detection from headers
-        server = resp.headers.get("server", "").lower()
-        powered = resp.headers.get("x-powered-by", "").lower()
-        body_snippet = resp.text[:5000].lower()
-
-        techs = []
-        tech_sigs = {
-            "Nginx": "nginx" in server,
-            "Apache": "apache" in server,
-            "IIS": "iis" in server or "microsoft-iis" in server,
-            "Cloudflare": "cloudflare" in server or "cf-ray" in resp.headers,
-            "AWS CloudFront": "cloudfront" in resp.headers.get("via","").lower() or "x-amz-cf-id" in resp.headers,
-            "Vercel": "x-vercel-id" in resp.headers,
-            "PHP": "php" in powered,
-            "WordPress": "wp-content" in body_snippet or "wordpress" in body_snippet,
-            "React": "react" in body_snippet or "__react" in body_snippet,
-            "Next.js": "__next" in body_snippet or "/_next/" in body_snippet,
-            "Django": "csrftoken" in resp.headers.get("set-cookie","").lower(),
-            "jQuery": "jquery" in body_snippet,
-            "Bootstrap": "bootstrap" in body_snippet,
-        }
-        techs = [name for name, match in tech_sigs.items() if match]
-
-        results["technologies"] = techs
-        results["status_code"] = resp.status_code
-        results["final_url"] = resp.url
-        results["content_type"] = resp.headers.get("content-type", "")
-        results["redirect_count"] = len(resp.history)
-
-    except requests.exceptions.SSLError:
-        results["ssl_error"] = True
-        results["note"] = "SSL certificate error"
-    except Exception as e:
-        results["status"] = "error"
-        results["message"] = str(e)
-
-    return results
-
-
-# ─── Helper ───────────────────────────────────────────────────────────────────
-
-def extract_domain(target: str) -> str:
-    """Extract base domain from URL, IP, or plain domain."""
-    target = target.strip().lower()
-    if not target.startswith(("http://", "https://")):
-        target = "https://" + target
-    parsed = urlparse(target)
-    return parsed.netloc.split(":")[0]
-
-
-# ─── Routes ───────────────────────────────────────────────────────────────────
+# ─── Routes ──────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-
-@app.route("/api/investigate", methods=["POST"])
-def investigate():
+@app.route("/api/username", methods=["POST"])
+def api_username():
     data = request.get_json()
-    if not data or "target" not in data:
-        return jsonify({"error": "No target provided"}), 400
+    if not data or not data.get("username"):
+        return jsonify({"error": "username required"}), 400
+    return jsonify(check_username(data["username"].strip()))
 
-    target = data["target"].strip()
-    modules = data.get("modules", ["whois", "dns", "ip", "email", "reputation", "tech"])
+@app.route("/api/phone", methods=["POST"])
+def api_phone():
+    data = request.get_json()
+    if not data or not data.get("number"):
+        return jsonify({"error": "number required"}), 400
+    return jsonify(lookup_phone(data["number"]))
 
-    results = {
-        "target": target,
-        "domain": extract_domain(target),
-        "timestamp": int(time.time()),
-        "modules": {}
-    }
+@app.route("/api/email", methods=["POST"])
+def api_email():
+    data = request.get_json()
+    if not data or not data.get("email"):
+        return jsonify({"error": "email required"}), 400
+    return jsonify(check_email_breach(data["email"]))
 
-    module_map = {
-        "whois": gather_whois,
-        "dns": gather_dns,
-        "ip": gather_ip_intel,
-        "email": gather_email_intel,
-        "reputation": gather_domain_reputation,
-        "tech": gather_tech_fingerprint,
-    }
-
-    # Run modules in parallel
-    with ThreadPoolExecutor(max_workers=6) as executor:
-        futures = {
-            executor.submit(fn, target): key
-            for key, fn in module_map.items()
-            if key in modules
-        }
-        for future in as_completed(futures):
-            key = futures[future]
-            try:
-                results["modules"][key] = future.result()
-            except Exception as e:
-                results["modules"][key] = {"status": "error", "message": str(e)}
-
-    return jsonify(results)
-
+@app.route("/api/name", methods=["POST"])
+def api_name():
+    data = request.get_json()
+    if not data or not data.get("name"):
+        return jsonify({"error": "name required"}), 400
+    return jsonify(search_name(data["name"]))
 
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({
         "status": "ok",
-        "hunter_configured": bool(HUNTER_API_KEY),
-        "shodan_configured": bool(SHODAN_API_KEY),
-        "ipinfo_configured": bool(IPINFO_TOKEN),
-        "virustotal_configured": bool(VIRUSTOTAL_KEY),
+        "hibp_configured": bool(HIBP_API_KEY),
+        "numverify_configured": bool(NUMVERIFY_KEY),
     })
-
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=int(os.getenv("PORT", 5001)))
