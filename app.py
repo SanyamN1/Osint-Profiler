@@ -3,14 +3,12 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import requests
 import os
-import time
-import hashlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 app = Flask(__name__)
 CORS(app)
 
-NUMVERIFY_KEY = os.getenv("NUMVERIFY_API_KEY", "")     # Phone lookup
+VERIPHONE_KEY = os.getenv("VERIPHONE_API_KEY", "")     # veriphone.io — free tier 1000/month
 
 # ─── Username Checker ────────────────────────────────────────────────────────
 
@@ -67,38 +65,31 @@ def check_username(username: str) -> dict:
     return results
 
 
-# ─── Phone Lookup ────────────────────────────────────────────────────────────
+# ─── Phone Lookup (veriphone.io) ─────────────────────────────────────────────
 
 def lookup_phone(number: str) -> dict:
-    # Strip spaces/dashes for cleaner input
     number = number.strip().replace(" ", "").replace("-", "")
-    if not NUMVERIFY_KEY:
-        # Fallback: basic format info without API
-        return {
-            "status": "success",
-            "number": number,
-            "note": "Set NUMVERIFY_API_KEY for full carrier/line-type data",
-            "country_code": number[:3] if number.startswith("+") else None,
-        }
+    if not VERIPHONE_KEY:
+        return {"status": "error", "message": "Set VERIPHONE_API_KEY (free at veriphone.io — 1000 lookups/month)"}
     try:
         r = requests.get(
-            "http://apilayer.net/api/validate",
-            params={"access_key": NUMVERIFY_KEY, "number": number, "format": 1},
+            "https://api.veriphone.io/v2/verify",
+            params={"phone": number, "default_country": "IN"},
+            headers={"Authorization": f"Bearer {VERIPHONE_KEY}"},
             timeout=8,
         )
         d = r.json()
-        if not d.get("valid"):
+        if not d.get("phone_valid"):
             return {"status": "error", "message": "Invalid or unrecognised number"}
         return {
             "status": "success",
-            "number": d.get("international_format"),
-            "local_format": d.get("local_format"),
-            "valid": d.get("valid"),
-            "country": d.get("country_name"),
-            "country_code": d.get("country_code"),
-            "location": d.get("location"),
+            "number": d.get("international_number"),
+            "local": d.get("local_number"),
+            "e164": d.get("e164"),
+            "type": d.get("phone_type"),
+            "region": d.get("phone_region"),
+            "country": d.get("country"),
             "carrier": d.get("carrier"),
-            "line_type": d.get("line_type"),
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -175,6 +166,47 @@ def search_name(name: str) -> dict:
     }
 
 
+# ─── Vehicle Lookup (India) ───────────────────────────────────────────────────
+
+# State codes from Indian number plates
+STATE_CODES = {
+    "AN":"Andaman & Nicobar","AP":"Andhra Pradesh","AR":"Arunachal Pradesh",
+    "AS":"Assam","BR":"Bihar","CG":"Chhattisgarh","CH":"Chandigarh",
+    "DD":"Daman & Diu","DL":"Delhi","DN":"Dadra & Nagar Haveli","GA":"Goa",
+    "GJ":"Gujarat","HP":"Himachal Pradesh","HR":"Haryana","JH":"Jharkhand",
+    "JK":"Jammu & Kashmir","KA":"Karnataka","KL":"Kerala","LA":"Ladakh",
+    "LD":"Lakshadweep","MH":"Maharashtra","ML":"Meghalaya","MN":"Manipur",
+    "MP":"Madhya Pradesh","MZ":"Mizoram","NL":"Nagaland","OD":"Odisha",
+    "PB":"Punjab","PY":"Puducherry","RJ":"Rajasthan","SK":"Sikkim",
+    "TN":"Tamil Nadu","TR":"Tripura","TS":"Telangana","UK":"Uttarakhand",
+    "UP":"Uttar Pradesh","WB":"West Bengal",
+}
+
+def lookup_vehicle(plate: str) -> dict:
+    plate = plate.strip().upper().replace(" ", "").replace("-", "")
+    if len(plate) < 6:
+        return {"status": "error", "message": "Enter a valid Indian registration number (e.g. DL01AB1234)"}
+
+    state_code = plate[:2]
+    state = STATE_CODES.get(state_code, "Unknown State")
+    rto_code = plate[:4]  # e.g. DL01
+
+    return {
+        "status": "success",
+        "plate": plate,
+        "state_code": state_code,
+        "state": state,
+        "rto_code": rto_code,
+        "links": [
+            {"label": "RC Details — CarInfo", "url": f"https://www.carinfo.app/rc-search/{plate}"},
+            {"label": "E-Challan Check — Parivahan", "url": f"https://echallan.parivahan.gov.in/index/accused-challan"},
+            {"label": "RC Status — Vahan (Official)", "url": "https://vahan.parivahan.gov.in/vahanservice/vahan/ui/statevalidation/homepage.xhtml"},
+            {"label": "mParivahan App Lookup", "url": "https://mparivahan.app.link/"},
+        ],
+        "note": "Click a link to check full RC details, owner info, and challans on the respective platform.",
+    }
+
+
 # ─── Routes ──────────────────────────────────────────────────────────────────
 
 @app.route("/")
@@ -209,11 +241,18 @@ def api_name():
         return jsonify({"error": "name required"}), 400
     return jsonify(search_name(data["name"]))
 
+@app.route("/api/vehicle", methods=["POST"])
+def api_vehicle():
+    data = request.get_json()
+    if not data or not data.get("plate"):
+        return jsonify({"error": "plate required"}), 400
+    return jsonify(lookup_vehicle(data["plate"]))
+
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({
         "status": "ok",
-        "numverify_configured": bool(NUMVERIFY_KEY),
+        "veriphone_configured": bool(VERIPHONE_KEY),
     })
 
 if __name__ == "__main__":

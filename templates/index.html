@@ -122,12 +122,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       <button class="nav-btn" onclick="switchTab('phone',this)"><span class="nav-icon">📱</span> Phone Lookup</button>
       <button class="nav-btn" onclick="switchTab('email',this)"><span class="nav-icon">📧</span> Email Breach</button>
       <button class="nav-btn" onclick="switchTab('name',this)"><span class="nav-icon">🔎</span> Name Search</button>
+      <button class="nav-btn" onclick="switchTab('vehicle',this)"><span class="nav-icon">🚗</span> Vehicle Lookup</button>
     </div>
     <div>
       <h3>API Status</h3>
       <div class="api-box">
         <div class="api-row"><span class="api-key">EMAILREP</span><span class="dot on"></span></div>
-        <div class="api-row"><span class="api-key">NUMVERIFY</span><span class="dot off" id="dot-num"></span></div>
+        <div class="api-row"><span class="api-key">VERIPHONE</span><span class="dot off" id="dot-veriphone"></span></div>
       </div>
     </div>
   </aside>
@@ -187,6 +188,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
       </div>
       <div id="name-results"><div class="empty-state"><div class="big-icon">🔎</div><h3>Enter a full name above</h3><p>Generates direct search links across social platforms</p></div></div>
     </div>
+
+    <!-- Vehicle Tab -->
+    <div class="tab-panel" id="tab-vehicle">
+      <div class="page-header">
+        <h2>🚗 Vehicle Lookup</h2>
+        <p>Indian number plate lookup — RC details, challan check, owner info</p>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="vehicle-input" placeholder="DL01AB1234" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runVehicle()" style="text-transform:uppercase"/>
+        <button id="vehicle-btn" onclick="runVehicle()">Lookup →</button>
+      </div>
+      <div id="vehicle-results"><div class="empty-state"><div class="big-icon">🚗</div><h3>Enter a number plate above</h3><p>e.g. DL01AB1234 or MH02CL0555</p></div></div>
+    </div>
   </main>
 </div>
 
@@ -201,7 +215,7 @@ function switchTab(name, btn) {
 async function checkHealth() {
   try {
     const d = await fetch('/api/health').then(r => r.json());
-    document.getElementById('dot-num').className = 'dot ' + (d.numverify_configured ? 'on' : 'off');
+    document.getElementById('dot-veriphone').className = 'dot ' + (d.veriphone_configured ? 'on' : 'off');
   } catch(e) {}
 }
 
@@ -300,10 +314,9 @@ async function runPhone() {
 function renderPhone(d) {
   if (d.status==='error') { document.getElementById('phone-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
   let body = '';
-  if (d.note) body += `<div class="note-msg" style="margin-bottom:.75rem">${d.note}</div>`;
-  const rows = [['NUMBER',d.number],['LOCAL FORMAT',d.local_format],['COUNTRY',d.country],['COUNTRY CODE',d.country_code],['LOCATION',d.location],['CARRIER',d.carrier],['LINE TYPE',d.line_type]];
+  const rows = [['NUMBER',d.number],['LOCAL',d.local],['E.164',d.e164],['TYPE',d.type],['REGION',d.region],['COUNTRY',d.country],['CARRIER',d.carrier]];
   rows.forEach(([k,v]) => { if(v) body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${v}</span></div>`; });
-  document.getElementById('phone-results').innerHTML = card('📱','Phone Info', d.country||d.country_code||'Result','cb-ok',body);
+  document.getElementById('phone-results').innerHTML = card('📱','Phone Info', d.country||'Result','cb-ok',body);
 }
 
 // ── Email ─────────────────────────────────────────────────────────────────
@@ -367,6 +380,32 @@ function renderName(d) {
     body += `<a class="name-link" href="${l.url}" target="_blank" rel="noopener"><span>${l.platform}</span><span class="arrow">↗</span></a>`;
   });
   document.getElementById('name-results').innerHTML = card('🔎',`Results for "${d.name}"`,`${(d.search_links||[]).length} platforms`,'cb-ok', body);
+}
+
+// ── Vehicle ───────────────────────────────────────────────────────────────
+async function runVehicle() {
+  const val = document.getElementById('vehicle-input').value.trim().toUpperCase();
+  if (!val) return;
+  const btn = document.getElementById('vehicle-btn');
+  btn.disabled=true; btn.textContent='Looking up...';
+  try {
+    const d = await fetch('/api/vehicle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plate:val})}).then(r=>r.json());
+    renderVehicle(d);
+  } catch(e) {
+    document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`;
+  } finally { btn.disabled=false; btn.textContent='Lookup →'; }
+}
+
+function renderVehicle(d) {
+  if (d.status==='error') { document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
+  let body = `<div class="data-row"><span class="data-key">PLATE</span><span class="data-val" style="color:var(--accent);font-size:1rem">${d.plate}</span></div>`;
+  body += `<div class="data-row"><span class="data-key">STATE</span><span class="data-val">${d.state}</span></div>`;
+  body += `<div class="data-row"><span class="data-key">RTO CODE</span><span class="data-val">${d.rto_code}</span></div>`;
+  body += `<div class="note-msg" style="margin:1rem 0">${d.note}</div>`;
+  (d.links||[]).forEach(l => {
+    body += `<a class="name-link" href="${l.url}" target="_blank" rel="noopener"><span>${l.label}</span><span class="arrow">↗</span></a>`;
+  });
+  document.getElementById('vehicle-results').innerHTML = card('🚗', `Vehicle: ${d.plate}`, d.state, 'cb-ok', body);
 }
 
 checkHealth();
