@@ -7,15 +7,14 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#080c10; --surface:#0d1117; --surface2:#161b22; --border:#21262d;
-  --accent:#58a6ff; --accent2:#1f6feb; --green:#3fb950; --red:#f85149;
-  --orange:#d29922; --purple:#bc8cff; --text:#c9d1d9; --muted:#484f58;
-  --mono:'IBM Plex Mono',monospace; --sans:'Space Grotesk',sans-serif;
+  --bg:#080c10;--surface:#0d1117;--surface2:#161b22;--border:#21262d;
+  --accent:#58a6ff;--accent2:#1f6feb;--green:#3fb950;--red:#f85149;
+  --orange:#d29922;--purple:#bc8cff;--text:#c9d1d9;--muted:#484f58;
+  --mono:'IBM Plex Mono',monospace;--sans:'Space Grotesk',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
 .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-/* Sidebar */
 .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;gap:1.75rem;position:sticky;top:0;height:100vh;overflow-y:auto;}
 .brand{display:flex;align-items:center;gap:10px;}
 .brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent2),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
@@ -32,13 +31,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .dot{width:7px;height:7px;border-radius:50%;}
 .dot.on{background:var(--green);box-shadow:0 0 5px var(--green);}
 .dot.off{background:var(--muted);}
-/* Main */
-.main{padding:2rem;max-width:860px;}
+.main{padding:2rem;max-width:900px;}
 .tab-panel{display:none;}.tab-panel.active{display:block;}
 .page-header{margin-bottom:1.75rem;}
 .page-header h2{font-size:1.4rem;font-weight:700;margin-bottom:4px;}
 .page-header p{color:var(--muted);font-size:.88rem;}
-/* Search bar */
 .search-bar{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:2rem;transition:border-color .2s;}
 .search-bar:focus-within{border-color:var(--accent2);box-shadow:0 0 0 3px rgba(31,111,235,.15);}
 .search-bar input{flex:1;background:var(--surface);border:none;padding:.85rem 1.1rem;font-family:var(--mono);font-size:.88rem;color:var(--text);outline:none;}
@@ -46,11 +43,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .search-bar button{background:var(--accent2);border:none;color:#fff;padding:0 1.5rem;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap;}
 .search-bar button:hover{background:var(--accent);}
 .search-bar button:disabled{opacity:.5;cursor:not-allowed;}
-/* Progress */
 .progress-track{height:2px;background:var(--border);border-radius:1px;margin-bottom:1.5rem;display:none;}
 .progress-track.active{display:block;}
 .progress-fill{height:100%;background:var(--accent);border-radius:1px;transition:width .4s;box-shadow:0 0 6px var(--accent);}
-/* Cards */
 .result-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1rem;}
 .card-header{display:flex;align-items:center;gap:10px;padding:.9rem 1.1rem;border-bottom:1px solid var(--border);background:var(--surface2);cursor:pointer;}
 .card-header:hover{background:rgba(88,166,255,.04);}
@@ -60,55 +55,62 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .cb-warn{background:rgba(210,153,34,.15);color:var(--orange);}
 .cb-err{background:rgba(248,81,73,.15);color:var(--red);}
 .cb-na{background:var(--surface);color:var(--muted);border:1px solid var(--border);}
+.cb-blue{background:rgba(88,166,255,.15);color:var(--accent);}
 .card-chevron{color:var(--muted);transition:transform .2s;font-size:.75rem;}
 .card-chevron.open{transform:rotate(180deg);}
 .card-body{padding:1.1rem;display:none;}
 .card-body.open{display:block;}
-/* Data rows */
 .data-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.45rem 0;border-bottom:1px solid rgba(33,38,45,.8);gap:1rem;}
 .data-row:last-child{border-bottom:none;}
-.data-key{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.05em;flex-shrink:0;min-width:110px;padding-top:2px;}
+.data-key{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.05em;flex-shrink:0;min-width:120px;padding-top:2px;}
 .data-val{font-family:var(--mono);font-size:.78rem;text-align:right;word-break:break-all;}
-/* Tags */
 .tag-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
 .tag{font-family:var(--mono);font-size:.66rem;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;}
 .tag.green{background:rgba(63,185,80,.1);border-color:rgba(63,185,80,.2);color:var(--green);}
 .tag.red{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.2);color:var(--red);}
 .tag.blue{background:rgba(88,166,255,.1);border-color:rgba(88,166,255,.2);color:var(--accent);}
-/* Platform grid */
+.tag.purple{background:rgba(188,140,255,.1);border-color:rgba(188,140,255,.2);color:var(--purple);}
 .platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
 .platform-item{display:flex;align-items:center;gap:8px;padding:.6rem .8rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.82rem;}
-.platform-item a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.platform-item a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .platform-item a:hover{text-decoration:underline;}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .status-dot.found{background:var(--green);box-shadow:0 0 4px var(--green);}
 .status-dot.notfound{background:var(--muted);}
-/* Breach items */
-.breach-item{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.85rem;margin-bottom:8px;}
-.breach-name{font-weight:600;font-size:.9rem;margin-bottom:6px;color:var(--red);}
-.breach-meta{font-size:.78rem;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:6px;}
-.breach-desc{font-size:.75rem;color:var(--muted);line-height:1.5;}
-/* Name search links */
 .name-link{display:flex;align-items:center;justify-content:space-between;padding:.65rem .85rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;text-decoration:none;color:var(--text);transition:border-color .15s;}
 .name-link:hover{border-color:var(--accent2);}
 .name-link span{font-size:.85rem;font-weight:500;}
 .name-link .arrow{color:var(--muted);font-size:.8rem;}
-/* Stat boxes */
-.stat-row{display:flex;gap:8px;margin-bottom:1rem;}
-.stat-box{flex:1;text-align:center;padding:.7rem;background:var(--surface2);border-radius:6px;border:1px solid var(--border);}
+.stat-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:80px;text-align:center;padding:.7rem;background:var(--surface2);border-radius:6px;border:1px solid var(--border);}
 .stat-num{font-family:var(--mono);font-size:1.3rem;font-weight:500;}
 .stat-lbl{font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.06em;margin-top:3px;}
-/* Empty / error */
 .empty-state{text-align:center;padding:3.5rem 2rem;color:var(--muted);}
 .empty-state .big-icon{font-size:2.5rem;margin-bottom:.75rem;opacity:.4;}
 .empty-state h3{font-size:1rem;margin-bottom:.4rem;color:var(--text);opacity:.5;}
 .empty-state p{font-size:.82rem;}
-.error-msg{color:var(--red);font-family:var(--mono);font-size:.8rem;padding:.5rem;background:rgba(248,81,73,.08);border-radius:5px;}
+.error-msg{color:var(--red);font-family:var(--mono);font-size:.8rem;padding:.6rem .8rem;background:rgba(248,81,73,.08);border-radius:5px;margin-bottom:.5rem;}
 .note-msg{color:var(--orange);font-family:var(--mono);font-size:.78rem;padding:.5rem;background:rgba(210,153,34,.08);border-radius:5px;}
+/* GitHub */
+.repo-list{display:flex;flex-direction:column;gap:8px;}
+.repo-item{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;}
+.repo-name{font-weight:600;font-size:.88rem;margin-bottom:4px;}
+.repo-name a{color:var(--accent);text-decoration:none;}
+.repo-name a:hover{text-decoration:underline;}
+.repo-meta{display:flex;gap:.75rem;font-family:var(--mono);font-size:.68rem;color:var(--muted);flex-wrap:wrap;}
+.repo-desc{font-size:.78rem;color:var(--muted);margin-top:4px;}
+/* Reddit */
+.comment-item{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.75rem;margin-bottom:6px;}
+.comment-sub{font-family:var(--mono);font-size:.68rem;color:var(--accent);margin-bottom:4px;}
+.comment-body{font-size:.8rem;color:var(--text);line-height:1.5;}
+.comment-score{font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-top:4px;}
+/* Domain */
+.dns-section{margin-bottom:1rem;}
+.dns-type{font-family:var(--mono);font-size:.7rem;color:var(--purple);letter-spacing:.08em;margin-bottom:4px;}
+.dns-record{font-family:var(--mono);font-size:.75rem;padding:3px 0;color:var(--text);word-break:break-all;}
 @media(max-width:680px){.layout{grid-template-columns:1fr;}.sidebar{height:auto;position:static;}}
 </style>
 </head>
-
 <body>
 <div class="layout">
   <aside class="sidebar">
@@ -119,6 +121,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div>
       <h3>Search Modules</h3>
       <button class="nav-btn active" onclick="switchTab('username',this)"><span class="nav-icon">👤</span> Username Checker</button>
+      <button class="nav-btn" onclick="switchTab('github',this)"><span class="nav-icon">🐙</span> GitHub Lookup</button>
+      <button class="nav-btn" onclick="switchTab('reddit',this)"><span class="nav-icon">🤖</span> Reddit Activity</button>
+      <button class="nav-btn" onclick="switchTab('domain',this)"><span class="nav-icon">🌐</span> Domain / IP</button>
       <button class="nav-btn" onclick="switchTab('phone',this)"><span class="nav-icon">📱</span> Phone Lookup</button>
       <button class="nav-btn" onclick="switchTab('email',this)"><span class="nav-icon">📧</span> Email Breach</button>
       <button class="nav-btn" onclick="switchTab('name',this)"><span class="nav-icon">🔎</span> Name Search</button>
@@ -127,8 +132,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div>
       <h3>API Status</h3>
       <div class="api-box">
-        <div class="api-row"><span class="api-key">EMAILREP</span><span class="dot on"></span></div>
-        <div class="api-row"><span class="api-key">VERIPHONE</span><span class="dot off" id="dot-veriphone"></span></div>
+        <div class="api-row"><span class="api-key">EMAILREP</span><span class="dot" id="dot-emailrep"></span></div>
+        <div class="api-row"><span class="api-key">VERIPHONE</span><span class="dot" id="dot-veriphone"></span></div>
+        <div class="api-row"><span class="api-key">GITHUB API</span><span class="dot on"></span></div>
+        <div class="api-row"><span class="api-key">REDDIT API</span><span class="dot on"></span></div>
       </div>
     </div>
   </aside>
@@ -138,14 +145,56 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div class="tab-panel active" id="tab-username">
       <div class="page-header">
         <h2>👤 Username Checker</h2>
-        <p>Check if a username is taken across 20+ platforms</p>
+        <p>Check if a username is taken across 130+ platforms simultaneously</p>
       </div>
       <div class="search-bar">
         <input type="text" id="username-input" placeholder="johndoe" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runUsername()"/>
         <button id="username-btn" onclick="runUsername()">Search →</button>
       </div>
       <div class="progress-track" id="username-progress"><div class="progress-fill" id="username-fill" style="width:0%"></div></div>
-      <div id="username-results"><div class="empty-state"><div class="big-icon">👤</div><h3>Enter a username above</h3><p>We'll check 20+ platforms in parallel</p></div></div>
+      <div id="username-results"><div class="empty-state"><div class="big-icon">👤</div><h3>Enter a username above</h3><p>Checks 130+ platforms in parallel</p></div></div>
+    </div>
+
+    <!-- GitHub Tab -->
+    <div class="tab-panel" id="tab-github">
+      <div class="page-header">
+        <h2>🐙 GitHub Deep Lookup</h2>
+        <p>Profile, repos, languages, commit emails via GitHub public API</p>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="github-input" placeholder="torvalds" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runGithub()"/>
+        <button id="github-btn" onclick="runGithub()">Lookup →</button>
+      </div>
+      <div class="progress-track" id="github-progress"><div class="progress-fill" id="github-fill" style="width:0%"></div></div>
+      <div id="github-results"><div class="empty-state"><div class="big-icon">🐙</div><h3>Enter a GitHub username</h3><p>Fetches profile, repos, languages & commit emails</p></div></div>
+    </div>
+
+    <!-- Reddit Tab -->
+    <div class="tab-panel" id="tab-reddit">
+      <div class="page-header">
+        <h2>🤖 Reddit Activity</h2>
+        <p>Posts, comments, subreddits and karma via Reddit public API</p>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="reddit-input" placeholder="spez" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runReddit()"/>
+        <button id="reddit-btn" onclick="runReddit()">Lookup →</button>
+      </div>
+      <div class="progress-track" id="reddit-progress"><div class="progress-fill" id="reddit-fill" style="width:0%"></div></div>
+      <div id="reddit-results"><div class="empty-state"><div class="big-icon">🤖</div><h3>Enter a Reddit username</h3><p>Scrapes public posts, comments and subreddit activity</p></div></div>
+    </div>
+
+    <!-- Domain Tab -->
+    <div class="tab-panel" id="tab-domain">
+      <div class="page-header">
+        <h2>🌐 Domain / IP OSINT</h2>
+        <p>WHOIS, DNS records, IP geolocation, reverse DNS, hosting info</p>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="domain-input" placeholder="example.com or 8.8.8.8" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runDomain()"/>
+        <button id="domain-btn" onclick="runDomain()">Analyze →</button>
+      </div>
+      <div class="progress-track" id="domain-progress"><div class="progress-fill" id="domain-fill" style="width:0%"></div></div>
+      <div id="domain-results"><div class="empty-state"><div class="big-icon">🌐</div><h3>Enter a domain or IP address</h3><p>Returns WHOIS, DNS, geolocation, hosting and more</p></div></div>
     </div>
 
     <!-- Phone Tab -->
@@ -166,34 +215,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     <div class="tab-panel" id="tab-email">
       <div class="page-header">
         <h2>📧 Email Breach Check</h2>
-        <p>Check if an email appears in known data breaches via HaveIBeenPwned</p>
+        <p>Check if an email appears in known data breaches</p>
       </div>
       <div class="search-bar">
         <input type="text" id="email-input" placeholder="user@example.com" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runEmail()"/>
         <button id="email-btn" onclick="runEmail()">Check →</button>
       </div>
       <div class="progress-track" id="email-progress"><div class="progress-fill" id="email-fill" style="width:0%"></div></div>
-      <div id="email-results"><div class="empty-state"><div class="big-icon">📧</div><h3>Enter an email above</h3><p>Checks breaches and paste sites</p></div></div>
+      <div id="email-results"><div class="empty-state"><div class="big-icon">📧</div><h3>Enter an email above</h3><p>Checks breaches and reputation via emailrep.io</p></div></div>
     </div>
 
     <!-- Name Tab -->
     <div class="tab-panel" id="tab-name">
       <div class="page-header">
         <h2>🔎 Name Search</h2>
-        <p>Search a person's name across LinkedIn, Facebook, Twitter and more</p>
+        <p>Search a person's name across social media and people-finder sites</p>
       </div>
       <div class="search-bar">
         <input type="text" id="name-input" placeholder="John Doe" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runName()"/>
         <button id="name-btn" onclick="runName()">Search →</button>
       </div>
-      <div id="name-results"><div class="empty-state"><div class="big-icon">🔎</div><h3>Enter a full name above</h3><p>Generates direct search links across social platforms</p></div></div>
+      <div id="name-results"><div class="empty-state"><div class="big-icon">🔎</div><h3>Enter a full name above</h3><p>Generates direct search links across 19 platforms</p></div></div>
     </div>
 
     <!-- Vehicle Tab -->
     <div class="tab-panel" id="tab-vehicle">
       <div class="page-header">
         <h2>🚗 Vehicle Lookup</h2>
-        <p>Indian number plate lookup — RC details, challan check, owner info</p>
+        <p>Indian number plate lookup — RC details, challan check</p>
       </div>
       <div class="search-bar">
         <input type="text" id="vehicle-input" placeholder="DL01AB1234" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')runVehicle()" style="text-transform:uppercase"/>
@@ -203,6 +252,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
     </div>
   </main>
 </div>
+
 
 <script>
 function switchTab(name, btn) {
@@ -216,25 +266,19 @@ async function checkHealth() {
   try {
     const d = await fetch('/api/health').then(r => r.json());
     document.getElementById('dot-veriphone').className = 'dot ' + (d.veriphone_configured ? 'on' : 'off');
+    document.getElementById('dot-emailrep').className  = 'dot ' + (d.emailrep_configured  ? 'on' : 'off');
   } catch(e) {}
 }
 
 function startProgress(fillId, trackId) {
   document.getElementById(trackId).className = 'progress-track active';
   let pct = 0;
-  return setInterval(() => {
-    pct = Math.min(pct + 7, 88);
-    document.getElementById(fillId).style.width = pct + '%';
-  }, 250);
+  return setInterval(() => { pct = Math.min(pct + 5, 88); document.getElementById(fillId).style.width = pct + '%'; }, 250);
 }
-
 function stopProgress(iv, fillId, trackId) {
   clearInterval(iv);
   document.getElementById(fillId).style.width = '100%';
-  setTimeout(() => {
-    document.getElementById(trackId).className = 'progress-track';
-    document.getElementById(fillId).style.width = '0%';
-  }, 300);
+  setTimeout(() => { document.getElementById(trackId).className = 'progress-track'; document.getElementById(fillId).style.width = '0%'; }, 300);
 }
 
 function card(icon, title, badge, badgeClass, body) {
@@ -243,169 +287,303 @@ function card(icon, title, badge, badgeClass, body) {
       <span>${icon}</span><span class="card-title">${title}</span>
       <span class="card-badge ${badgeClass}">${badge}</span>
       <span class="card-chevron open">▼</span>
-    </div>
-    <div class="card-body open">${body}</div>
-  </div>`;
+    </div><div class="card-body open">${body}</div></div>`;
 }
-
 function toggleCard(h) {
   const b = h.nextElementSibling, c = h.querySelector('.card-chevron');
   b.classList.toggle('open'); c.classList.toggle('open');
 }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── Username ──────────────────────────────────────────────────────────────
+// ── API helper ────────────────────────────────────────────────────────────────
+async function callApi(endpoint, payload, btnId, loadingText) {
+  const btn = document.getElementById(btnId);
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = loadingText;
+  try {
+    const r = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    return await r.json();
+  } finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+// ── Username ──────────────────────────────────────────────────────────────────
 async function runUsername() {
   const val = document.getElementById('username-input').value.trim();
   if (!val) return;
-  const btn = document.getElementById('username-btn');
-  btn.disabled = true; btn.textContent = 'Checking...';
-  const iv = startProgress('username-fill', 'username-progress');
-  document.getElementById('username-results').innerHTML = '<div class="empty-state"><div class="big-icon">⟳</div><h3>Probing 20+ platforms...</h3></div>';
+  const iv = startProgress('username-fill','username-progress');
+  document.getElementById('username-results').innerHTML = '<div class="empty-state"><div class="big-icon">⟳</div><h3>Probing 130+ platforms...</h3></div>';
   try {
-    const d = await fetch('/api/username', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:val})}).then(r=>r.json());
-    stopProgress(iv, 'username-fill', 'username-progress');
+    const d = await callApi('/api/username', {username:val}, 'username-btn', 'Checking...');
+    stopProgress(iv,'username-fill','username-progress');
     renderUsername(d);
-  } catch(e) {
-    stopProgress(iv, 'username-fill', 'username-progress');
-    document.getElementById('username-results').innerHTML = `<div class="error-msg">⚠ ${e.message}</div>`;
-  } finally { btn.disabled=false; btn.textContent='Search →'; }
+  } catch(e) { stopProgress(iv,'username-fill','username-progress'); document.getElementById('username-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
 }
 
 function renderUsername(d) {
   if (d.error) { document.getElementById('username-results').innerHTML=`<div class="error-msg">⚠ ${d.error}</div>`; return; }
-  const found = d.found || [], notFound = d.not_found || [];
+  const found=d.found||[], notFound=d.not_found||[];
   let html = `<div class="stat-row">
     <div class="stat-box"><div class="stat-num" style="color:var(--green)">${found.length}</div><div class="stat-lbl">FOUND</div></div>
     <div class="stat-box"><div class="stat-num" style="color:var(--muted)">${notFound.length}</div><div class="stat-lbl">NOT FOUND</div></div>
     <div class="stat-box"><div class="stat-num" style="color:var(--accent)">${found.length+notFound.length}</div><div class="stat-lbl">CHECKED</div></div>
   </div>`;
   if (found.length) {
-    let grid = '<div class="platform-grid">';
-    found.forEach(p => { grid += `<div class="platform-item"><span class="status-dot found"></span><div><div style="font-size:.82rem;font-weight:500">${p.platform}</div><a href="${p.url}" target="_blank" rel="noopener">${p.url}</a></div></div>`; });
-    grid += '</div>';
-    html += card('✅','Taken On',`${found.length} platforms`,'cb-ok', grid);
+    let g = '<div class="platform-grid">';
+    found.forEach(p => { g += `<div class="platform-item"><span class="status-dot found"></span><div><div style="font-size:.82rem;font-weight:500">${esc(p.platform)}</div><a href="${esc(p.url)}" target="_blank">${esc(p.url)}</a></div></div>`; });
+    html += card('✅','Taken On',`${found.length} platforms`,'cb-ok', g+'</div>');
   }
   if (notFound.length) {
-    let grid = '<div class="platform-grid">';
-    notFound.forEach(p => { grid += `<div class="platform-item"><span class="status-dot notfound"></span><div><div style="font-size:.82rem;font-weight:500;color:var(--muted)">${p.platform}</div><a href="${p.url}" target="_blank" rel="noopener">${p.url}</a></div></div>`; });
-    grid += '</div>';
-    html += card('⬜','Available On',`${notFound.length} platforms`,'cb-na', grid);
+    let g = '<div class="platform-grid">';
+    notFound.forEach(p => { g += `<div class="platform-item"><span class="status-dot notfound"></span><div><div style="font-size:.82rem;font-weight:500;color:var(--muted)">${esc(p.platform)}</div><a href="${esc(p.url)}" target="_blank">${esc(p.url)}</a></div></div>`; });
+    html += card('⬜','Available On',`${notFound.length} platforms`,'cb-na', g+'</div>');
   }
   document.getElementById('username-results').innerHTML = html;
 }
 
-// ── Phone ─────────────────────────────────────────────────────────────────
-async function runPhone() {
-  const val = document.getElementById('phone-input').value.trim();
+// ── GitHub ────────────────────────────────────────────────────────────────────
+async function runGithub() {
+  const val = document.getElementById('github-input').value.trim();
   if (!val) return;
-  const btn = document.getElementById('phone-btn');
-  btn.disabled=true; btn.textContent='Looking up...';
+  const iv = startProgress('github-fill','github-progress');
+  try {
+    const d = await callApi('/api/github', {username:val}, 'github-btn', 'Fetching...');
+    stopProgress(iv,'github-fill','github-progress');
+    renderGithub(d);
+  } catch(e) { stopProgress(iv,'github-fill','github-progress'); document.getElementById('github-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
+}
+
+function renderGithub(d) {
+  const el = document.getElementById('github-results');
+  if (d.status==='error') { el.innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`; return; }
+
+  let profile = '';
+  [['USERNAME',d.username],['NAME',d.name],['BIO',d.bio],['LOCATION',d.location],
+   ['EMAIL',d.email],['COMPANY',d.company],['BLOG',d.blog],['TWITTER',d.twitter ? '@'+d.twitter : null],
+   ['JOINED',d.created_at ? d.created_at.split('T')[0] : null]
+  ].forEach(([k,v]) => { if(v) profile += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${esc(v)}</span></div>`; });
+
+  let html = `<div class="stat-row">
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent)">${d.public_repos}</div><div class="stat-lbl">REPOS</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${d.followers}</div><div class="stat-lbl">FOLLOWERS</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--muted)">${d.following}</div><div class="stat-lbl">FOLLOWING</div></div>
+  </div>`;
+
+  html += card('👤','Profile Info', d.name||d.username, 'cb-blue', profile);
+
+  if (d.commit_emails?.length) {
+    const emailTags = d.commit_emails.map(e => `<span class="tag blue">${esc(e)}</span>`).join('');
+    html += card('📧','Commit Emails',`${d.commit_emails.length} found`,'cb-ok', `<div class="tag-list">${emailTags}</div>`);
+  }
+
+  if (d.top_languages?.length) {
+    const langTags = d.top_languages.map(l => `<span class="tag purple">${esc(l.lang)} (${l.count})</span>`).join('');
+    html += card('💻','Top Languages',`${d.top_languages.length} langs`,'cb-blue', `<div class="tag-list">${langTags}</div>`);
+  }
+
+  if (d.top_repos?.length) {
+    let repos = '<div class="repo-list">';
+    d.top_repos.forEach(r => {
+      repos += `<div class="repo-item">
+        <div class="repo-name"><a href="${esc(r.url)}" target="_blank">${esc(r.name)}</a></div>
+        <div class="repo-meta"><span>⭐ ${r.stars}</span>${r.language ? `<span>${esc(r.language)}</span>` : ''}</div>
+        ${r.description ? `<div class="repo-desc">${esc(r.description)}</div>` : ''}
+      </div>`;
+    });
+    html += card('📦','Top Repositories',`${d.top_repos.length} repos`,'cb-blue', repos+'</div>');
+  }
+
+  el.innerHTML = html;
+}
+
+// ── Reddit ────────────────────────────────────────────────────────────────────
+async function runReddit() {
+  const val = document.getElementById('reddit-input').value.trim();
+  if (!val) return;
+  const iv = startProgress('reddit-fill','reddit-progress');
+  try {
+    const d = await callApi('/api/reddit', {username:val}, 'reddit-btn', 'Scraping...');
+    stopProgress(iv,'reddit-fill','reddit-progress');
+    renderReddit(d);
+  } catch(e) { stopProgress(iv,'reddit-fill','reddit-progress'); document.getElementById('reddit-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
+}
+
+function renderReddit(d) {
+  const el = document.getElementById('reddit-results');
+  if (d.status==='error') { el.innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`; return; }
+
+  const joined = d.created_utc ? new Date(d.created_utc*1000).toISOString().split('T')[0] : '?';
+  let html = `<div class="stat-row">
+    <div class="stat-box"><div class="stat-num" style="color:var(--orange)">${(d.karma_post||0).toLocaleString()}</div><div class="stat-lbl">POST KARMA</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--accent)">${(d.karma_comment||0).toLocaleString()}</div><div class="stat-lbl">COMMENT KARMA</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--muted);font-size:.85rem;padding-top:6px">${joined}</div><div class="stat-lbl">JOINED</div></div>
+  </div>`;
+
+  if (d.top_subreddits?.length) {
+    const tags = d.top_subreddits.map(s => `<span class="tag blue">r/${esc(s.name)} (${s.count})</span>`).join('');
+    html += card('📊','Active Subreddits',`${d.top_subreddits.length} subs`,'cb-blue', `<div class="tag-list">${tags}</div>`);
+  }
+
+  if (d.recent_posts?.length) {
+    let posts = '';
+    d.recent_posts.forEach(p => {
+      posts += `<div class="comment-item">
+        <div class="comment-sub">r/${esc(p.subreddit)} · ⬆ ${p.score}</div>
+        <div class="comment-body"><a href="${esc(p.url)}" target="_blank" style="color:var(--accent);text-decoration:none">${esc(p.title)}</a></div>
+      </div>`;
+    });
+    html += card('📝','Recent Posts',`${d.recent_posts.length} posts`,'cb-ok', posts);
+  }
+
+  if (d.recent_comments?.length) {
+    let comments = '';
+    d.recent_comments.forEach(c => {
+      comments += `<div class="comment-item">
+        <div class="comment-sub">r/${esc(c.subreddit)} · ⬆ ${c.score}</div>
+        <div class="comment-body">${esc(c.body)}</div>
+        <div class="comment-score"><a href="${esc(c.url)}" target="_blank" style="color:var(--muted)">view →</a></div>
+      </div>`;
+    });
+    html += card('💬','Recent Comments',`${d.recent_comments.length} comments`,'cb-blue', comments);
+  }
+
+  el.innerHTML = html;
+}
+
+// ── Domain / IP ───────────────────────────────────────────────────────────────
+async function runDomain() {
+  const val = document.getElementById('domain-input').value.trim();
+  if (!val) return;
+  const iv = startProgress('domain-fill','domain-progress');
+  try {
+    const d = await callApi('/api/domain', {query:val}, 'domain-btn', 'Analyzing...');
+    stopProgress(iv,'domain-fill','domain-progress');
+    renderDomain(d);
+  } catch(e) { stopProgress(iv,'domain-fill','domain-progress'); document.getElementById('domain-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
+}
+
+function renderDomain(d) {
+  const el = document.getElementById('domain-results');
+  if (d.status==='error') { el.innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`; return; }
+  let html = '';
+
+  // IP Info
+  if (d.ip_info) {
+    const ip = d.ip_info;
+    let body = '';
+    [['IP ADDRESS', d.ip], ['COUNTRY', ip.country], ['REGION', ip.region], ['CITY', ip.city],
+     ['ISP', ip.isp], ['ORG', ip.org], ['ASN', ip.asn], ['REVERSE DNS', ip.reverse_dns],
+     ['PROXY/VPN', ip.is_proxy ? 'Yes' : 'No'], ['HOSTING', ip.is_hosting ? 'Yes' : 'No']
+    ].forEach(([k,v]) => { if(v!=null) body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${esc(v)}</span></div>`; });
+    html += card('🌍', 'IP / Geo Info', d.ip||d.query, 'cb-blue', body);
+  }
+
+  // WHOIS
+  if (d.whois) {
+    const w = d.whois; let body = '';
+    [['REGISTRAR',w.registrar],['CREATED',w.created],['EXPIRES',w.expires],['UPDATED',w.updated]
+    ].forEach(([k,v]) => { if(v) body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${esc(v)}</span></div>`; });
+    if (w.name_servers?.length) body += `<div class="data-row"><span class="data-key">NAME SERVERS</span><span class="data-val">${w.name_servers.slice(0,4).map(esc).join('<br/>')}</span></div>`;
+    if (body) html += card('📋','WHOIS', d.query, 'cb-ok', body);
+  }
+
+  // DNS Records
+  if (d.dns) {
+    let body = '<div class="dns-section">';
+    Object.entries(d.dns).forEach(([type, records]) => {
+      if (records?.length) {
+        body += `<div class="dns-type">${type}</div>`;
+        records.forEach(r => { body += `<div class="dns-record">${esc(r)}</div>`; });
+      }
+    });
+    body += '</div>';
+    html += card('🔬', 'DNS Records', 'A · MX · TXT · NS', 'cb-blue', body);
+  }
+
+  // External links
+  if (d.links?.length) {
+    let body = '';
+    d.links.forEach(l => { body += `<a class="name-link" href="${esc(l.url)}" target="_blank"><span>${esc(l.label)}</span><span class="arrow">↗</span></a>`; });
+    html += card('🔗','Deep Dive Tools',`${d.links.length} tools`,'cb-warn', body);
+  }
+
+  el.innerHTML = html || `<div class="error-msg">No data returned for "${esc(d.query)}"</div>`;
+}
+
+// ── Phone ─────────────────────────────────────────────────────────────────────
+async function runPhone() {
+  const val = document.getElementById('phone-input').value.trim(); if (!val) return;
   const iv = startProgress('phone-fill','phone-progress');
   try {
-    const d = await fetch('/api/phone',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number:val})}).then(r=>r.json());
-    stopProgress(iv,'phone-fill','phone-progress');
-    renderPhone(d);
-  } catch(e) {
-    stopProgress(iv,'phone-fill','phone-progress');
-    document.getElementById('phone-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`;
-  } finally { btn.disabled=false; btn.textContent='Lookup →'; }
+    const d = await callApi('/api/phone',{number:val},'phone-btn','Looking up...');
+    stopProgress(iv,'phone-fill','phone-progress'); renderPhone(d);
+  } catch(e) { stopProgress(iv,'phone-fill','phone-progress'); document.getElementById('phone-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
 }
-
 function renderPhone(d) {
-  if (d.status==='error') { document.getElementById('phone-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
+  if (d.status==='error') { document.getElementById('phone-results').innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`; return; }
   let body = '';
-  const rows = [['NUMBER',d.number],['LOCAL',d.local],['E.164',d.e164],['TYPE',d.type],['REGION',d.region],['COUNTRY',d.country],['CARRIER',d.carrier]];
-  rows.forEach(([k,v]) => { if(v) body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${v}</span></div>`; });
-  document.getElementById('phone-results').innerHTML = card('📱','Phone Info', d.country||'Result','cb-ok',body);
+  [['NUMBER',d.number],['LOCAL',d.local],['E.164',d.e164],['TYPE',d.type],['REGION',d.region],['COUNTRY',d.country],['CARRIER',d.carrier]
+  ].forEach(([k,v]) => { if(v) body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val">${esc(v)}</span></div>`; });
+  document.getElementById('phone-results').innerHTML = card('📱','Phone Info',d.country||'Result','cb-ok',body);
 }
 
-// ── Email ─────────────────────────────────────────────────────────────────
+// ── Email ─────────────────────────────────────────────────────────────────────
 async function runEmail() {
-  const val = document.getElementById('email-input').value.trim();
-  if (!val) return;
-  const btn = document.getElementById('email-btn');
-  btn.disabled=true; btn.textContent='Checking...';
+  const val = document.getElementById('email-input').value.trim(); if (!val) return;
   const iv = startProgress('email-fill','email-progress');
   try {
-    const d = await fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:val})}).then(r=>r.json());
-    stopProgress(iv,'email-fill','email-progress');
-    renderEmail(d);
-  } catch(e) {
-    stopProgress(iv,'email-fill','email-progress');
-    document.getElementById('email-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`;
-  } finally { btn.disabled=false; btn.textContent='Check →'; }
+    const d = await callApi('/api/email',{email:val},'email-btn','Checking...');
+    stopProgress(iv,'email-fill','email-progress'); renderEmail(d);
+  } catch(e) { stopProgress(iv,'email-fill','email-progress'); document.getElementById('email-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
 }
-
 function renderEmail(d) {
-  if (d.status==='error') { document.getElementById('email-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
-  const bc = d.breach_count || 0;
-  const repColor = {'high':'var(--green)','medium':'var(--orange)','low':'var(--red)','none':'var(--muted)'}[d.reputation] || 'var(--muted)';
-  let html = `<div class="stat-row">
+  if (d.status==='error') { document.getElementById('email-results').innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`; return; }
+  const bc=d.breach_count||0;
+  const repColor={'high':'var(--green)','medium':'var(--orange)','low':'var(--red)','none':'var(--muted)'}[d.reputation]||'var(--muted)';
+  let html=`<div class="stat-row">
     <div class="stat-box"><div class="stat-num" style="color:${bc>0?'var(--red)':'var(--green)'}">${bc}</div><div class="stat-lbl">BREACHES</div></div>
     <div class="stat-box"><div class="stat-num" style="color:${repColor};font-size:.9rem;padding-top:4px">${(d.reputation||'?').toUpperCase()}</div><div class="stat-lbl">REPUTATION</div></div>
     <div class="stat-box"><div class="stat-num" style="color:${d.suspicious?'var(--red)':'var(--green)'}">${d.suspicious?'YES':'NO'}</div><div class="stat-lbl">SUSPICIOUS</div></div>
   </div>`;
-  let body = '';
-  const flags = [
-    ['BREACHED', d.breached], ['MALICIOUS ACTIVITY', d.malicious_activity],
-    ['SPAM', d.spam], ['DISPOSABLE', d.disposable], ['FREE PROVIDER', d.free_provider]
-  ];
-  flags.forEach(([k,v]) => {
-    body += `<div class="data-row"><span class="data-key">${k}</span><span class="data-val" style="color:${v?'var(--red)':'var(--green)'}">${v?'Yes':'No'}</span></div>`;
-  });
-  if (d.last_breached_at) body += `<div class="data-row"><span class="data-key">LAST BREACHED</span><span class="data-val">${d.last_breached_at}</span></div>`;
-  if (d.profiles?.length) body += `<div class="data-row"><span class="data-key">PROFILES</span><span class="data-val"><div class="tag-list">${d.profiles.map(p=>`<span class="tag blue">${p}</span>`).join('')}</div></span></div>`;
-  html += card('📧','Email Report', d.breached?`${bc} breach${bc!==1?'es':''}` : 'CLEAN', d.breached?'cb-err':'cb-ok', body);
-  document.getElementById('email-results').innerHTML = html;
+  let body='';
+  [['BREACHED',d.breached],['MALICIOUS ACTIVITY',d.malicious_activity],['SPAM',d.spam],['DISPOSABLE',d.disposable],['FREE PROVIDER',d.free_provider]
+  ].forEach(([k,v]) => { body+=`<div class="data-row"><span class="data-key">${k}</span><span class="data-val" style="color:${v?'var(--red)':'var(--green)'}">${v?'Yes':'No'}</span></div>`; });
+  if(d.last_breached_at) body+=`<div class="data-row"><span class="data-key">LAST BREACHED</span><span class="data-val">${esc(d.last_breached_at)}</span></div>`;
+  if(d.profiles?.length) body+=`<div class="data-row"><span class="data-key">PROFILES</span><span class="data-val"><div class="tag-list">${d.profiles.map(p=>`<span class="tag blue">${esc(p)}</span>`).join('')}</div></span></div>`;
+  html+=card('📧','Email Report',d.breached?`${bc} breach${bc!==1?'es':''}`:'CLEAN',d.breached?'cb-err':'cb-ok',body);
+  document.getElementById('email-results').innerHTML=html;
 }
 
-// ── Name ──────────────────────────────────────────────────────────────────
+// ── Name ──────────────────────────────────────────────────────────────────────
 async function runName() {
-  const val = document.getElementById('name-input').value.trim();
-  if (!val) return;
-  const btn = document.getElementById('name-btn');
-  btn.disabled=true; btn.textContent='Searching...';
+  const val = document.getElementById('name-input').value.trim(); if (!val) return;
   try {
-    const d = await fetch('/api/name',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:val})}).then(r=>r.json());
+    const d = await callApi('/api/name',{name:val},'name-btn','Searching...');
     renderName(d);
-  } catch(e) {
-    document.getElementById('name-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`;
-  } finally { btn.disabled=false; btn.textContent='Search →'; }
+  } catch(e) { document.getElementById('name-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
 }
-
 function renderName(d) {
-  if (d.status==='error') { document.getElementById('name-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
-  let body = `<div class="note-msg" style="margin-bottom:1rem">${d.note}</div>`;
-  (d.search_links||[]).forEach(l => {
-    body += `<a class="name-link" href="${l.url}" target="_blank" rel="noopener"><span>${l.platform}</span><span class="arrow">↗</span></a>`;
-  });
-  document.getElementById('name-results').innerHTML = card('🔎',`Results for "${d.name}"`,`${(d.search_links||[]).length} platforms`,'cb-ok', body);
+  if(d.status==='error'){document.getElementById('name-results').innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`;return;}
+  let body=`<div class="note-msg" style="margin-bottom:1rem">${esc(d.note)}</div>`;
+  (d.search_links||[]).forEach(l=>{body+=`<a class="name-link" href="${esc(l.url)}" target="_blank"><span>${esc(l.platform)}</span><span class="arrow">↗</span></a>`;});
+  document.getElementById('name-results').innerHTML=card('🔎',`Results for "${esc(d.name)}"`,`${(d.search_links||[]).length} platforms`,'cb-ok',body);
 }
 
-// ── Vehicle ───────────────────────────────────────────────────────────────
+// ── Vehicle ───────────────────────────────────────────────────────────────────
 async function runVehicle() {
-  const val = document.getElementById('vehicle-input').value.trim().toUpperCase();
-  if (!val) return;
-  const btn = document.getElementById('vehicle-btn');
-  btn.disabled=true; btn.textContent='Looking up...';
+  const val = document.getElementById('vehicle-input').value.trim().toUpperCase(); if (!val) return;
   try {
-    const d = await fetch('/api/vehicle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plate:val})}).then(r=>r.json());
+    const d = await callApi('/api/vehicle',{plate:val},'vehicle-btn','Looking up...');
     renderVehicle(d);
-  } catch(e) {
-    document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`;
-  } finally { btn.disabled=false; btn.textContent='Lookup →'; }
+  } catch(e) { document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${e.message}</div>`; }
 }
-
 function renderVehicle(d) {
-  if (d.status==='error') { document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${d.message}</div>`; return; }
-  let body = `<div class="data-row"><span class="data-key">PLATE</span><span class="data-val" style="color:var(--accent);font-size:1rem">${d.plate}</span></div>`;
-  body += `<div class="data-row"><span class="data-key">STATE</span><span class="data-val">${d.state}</span></div>`;
-  body += `<div class="data-row"><span class="data-key">RTO CODE</span><span class="data-val">${d.rto_code}</span></div>`;
-  body += `<div class="note-msg" style="margin:1rem 0">${d.note}</div>`;
-  (d.links||[]).forEach(l => {
-    body += `<a class="name-link" href="${l.url}" target="_blank" rel="noopener"><span>${l.label}</span><span class="arrow">↗</span></a>`;
-  });
-  document.getElementById('vehicle-results').innerHTML = card('🚗', `Vehicle: ${d.plate}`, d.state, 'cb-ok', body);
+  if(d.status==='error'){document.getElementById('vehicle-results').innerHTML=`<div class="error-msg">⚠ ${esc(d.message)}</div>`;return;}
+  let body=`<div class="data-row"><span class="data-key">PLATE</span><span class="data-val" style="color:var(--accent);font-size:1rem">${esc(d.plate)}</span></div>`;
+  body+=`<div class="data-row"><span class="data-key">STATE</span><span class="data-val">${esc(d.state)}</span></div>`;
+  body+=`<div class="data-row"><span class="data-key">RTO CODE</span><span class="data-val">${esc(d.rto_code)}</span></div>`;
+  body+=`<div class="note-msg" style="margin:1rem 0">${esc(d.note)}</div>`;
+  (d.links||[]).forEach(l=>{body+=`<a class="name-link" href="${esc(l.url)}" target="_blank"><span>${esc(l.label)}</span><span class="arrow">↗</span></a>`;});
+  document.getElementById('vehicle-results').innerHTML=card('🚗',`Vehicle: ${esc(d.plate)}`,esc(d.state),'cb-ok',body);
 }
 
 checkHealth();
